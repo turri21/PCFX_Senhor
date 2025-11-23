@@ -1,0 +1,3 @@
+[submodule "rtl/v810"]
+	path = rtl/v810
+	url = https://github.com/ReverendGumby/v810-emu.git
