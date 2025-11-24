@@ -4,6 +4,12 @@ module mach
    input         CE,
    input         RESn,
 
+   output        ROM_RD,
+   input         ROM_RDY,
+   output [19:0] ROM_A,
+   input [15:0]  ROM_DO,
+   output        ROM_CLKEN,
+
    output [31:0] A
    );
 
@@ -31,6 +37,7 @@ wand            mem_szrqn;
 
 logic           rom_cen;
 logic [15:0]    rom_do;
+logic           rom_readyn;
 
 logic           ram_cen;
 wire [31:0]     ram_do;
@@ -118,20 +125,11 @@ always @* begin
         mem_d_i = '0;
 end
 
-assign mem_readyn = unk_cen & rom_cen & ram_cen;
+assign mem_readyn = unk_cen & rom_readyn & ram_cen;
 assign mem_szrqn = ~unk_cen | rom_cen;
 
-ram #(4, 16) rombios
-  (
-   .CLK(CLK),
-   .nCE(rom_cen),
-   .nWE('1),
-   .nOE('0),
-   .nBE('1),
-   .A(mem_a[4:1]),
-   .DI('Z),
-   .DO(rom_do)
-   );
+assign rom_do = ROM_DO;
+assign rom_readyn = rom_cen | ~ROM_RDY;
 
 ram #(4, 32) dmem
   (
@@ -148,6 +146,10 @@ ram #(4, 32) dmem
 assign ram_cen = ~(~mem_mrqn & ~mem_a[31]);
 assign rom_cen = ~(~mem_mrqn & (mem_a[31:20] == 12'hFFF));
 assign unk_cen = ~(ram_cen & rom_cen);
+
+assign ROM_RD = ~rom_cen;
+assign ROM_A = mem_a[19:0];
+assign ROM_CLKEN = ~rom_cen & ~mem_bcystn;
 
 assign A = mem_a;
 

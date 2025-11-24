@@ -1,24 +1,30 @@
 
 module mycore
 (
-	input         sys_clk,
-	input         reset,
+	input        sys_clk,
+	input        reset,
 	
-    input         cpu_clk,
+    input        cpu_clk,
 
-	input         pal,
-	input         scandouble,
+	input        pal,
+	input        scandouble,
 
-	output reg    ce_pix,
+    output       ROM_RD,
+    input        ROM_RDY,
+    input [19:0] ROM_A,
+    input [15:0] ROM_DO,
+    output       ROM_CLKEN,
 
-	output reg    HBlank,
-	output reg    HSync,
-	output reg    VBlank,
-	output reg    VSync,
+    output reg   ce_pix,
 
-	output  [7:0] R,
-	output  [7:0] G,
-	output  [7:0] B
+	output reg   HBlank,
+	output reg   HSync,
+	output reg   VBlank,
+	output reg   VSync,
+
+	output [7:0] R,
+	output [7:0] G,
+	output [7:0] B
 );
 
 reg         cpu_ce;
@@ -42,6 +48,12 @@ mach mach
    .CLK(cpu_clk),
    .CE(cpu_ce),
    .RESn(~reset_cpu),
+
+   .ROM_RD(ROM_RD),
+   .ROM_RDY(ROM_RDY),
+   .ROM_A(ROM_A),
+   .ROM_DO(ROM_DO),
+   .ROM_CLKEN(ROM_CLKEN),
 
    .A(a)
    );

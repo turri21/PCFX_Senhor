@@ -225,34 +225,113 @@ wire forced_scandoubler;
 wire   [1:0] buttons;
 wire [127:0] status;
 wire  [10:0] ps2_key;
+wire        ioctl_download;
+wire  [7:0] ioctl_index;
+wire        ioctl_wr;
+wire [24:0] ioctl_addr;
+wire [15:0] ioctl_dout;
+reg         ioctl_wait;
 
-hps_io #(.CONF_STR(CONF_STR)) hps_io
+hps_io #(.CONF_STR(CONF_STR), .WIDE(1)) hps_io
 (
 	.clk_sys(clk_sys),
 	.HPS_BUS(HPS_BUS),
-	.EXT_BUS(),
-	.gamma_bus(),
-
-	.forced_scandoubler(forced_scandoubler),
 
 	.buttons(buttons),
+	.forced_scandoubler(forced_scandoubler),
+
+	.gamma_bus(),
+
 	.status(status),
 	.status_menumask({status[5]}),
 	
-	.ps2_key(ps2_key)
+	.ioctl_download(ioctl_download),
+	.ioctl_index(ioctl_index),
+	.ioctl_wr(ioctl_wr),
+	.ioctl_addr(ioctl_addr),
+	.ioctl_dout(ioctl_dout),
+	.ioctl_wait(ioctl_wait),
+
+	.ps2_key(ps2_key),
+
+	.EXT_BUS()
 );
+
+wire rombios_download   = ioctl_download & (ioctl_index[5:0] <= 6'h01);
 
 ///////////////////////   CLOCKS   ///////////////////////////////
 
-wire clk_sys;
+wire clk_sys, clk_ram;
+wire pll_locked;
+
 pll pll
 (
 	.refclk(CLK_50M),
 	.rst(0),
-	.outclk_0(clk_sys)
+	.outclk_0(clk_sys),
+    .outclk_1(clk_ram),
+    .locked(pll_locked)
 );
 
 wire reset = RESET | status[0] | buttons[1];
+
+/////////////////////////   MEMORY   /////////////////////////
+
+wire [19:0] rom_rdaddr;
+wire [15:0] rom_sdata;
+wire        rom_rd, rom_sdrdy;
+wire        sd_wrack;
+wire        ce_rom;
+
+sdram sdram
+(
+	.*,
+
+	.init(~pll_locked),
+	.clk(clk_ram),
+	.clkref(ce_rom),
+
+	.waddr(romwr_a),
+	.din(romwr_d),
+	.we('0),
+	.we_req(rom_wr),
+	.we_ack(sd_wrack),
+
+	.raddr({5'b0,rom_rdaddr}),
+	.rd(rom_rd & ce_rom),
+	.rd_rdy(rom_sdrdy),
+	.dout(rom_sdata)
+);
+
+
+wire        romwr_ack;
+reg  [23:0] romwr_a;
+wire [15:0] romwr_d = ioctl_dout;
+
+reg  rom_wr = 0;
+
+always @(posedge clk_sys) begin
+	reg old_download, old_reset;
+
+	old_download <= rombios_download;
+	old_reset <= reset;
+
+	if(~old_reset && reset) ioctl_wait <= 0;
+	if(~old_download && rombios_download) begin
+		romwr_a <= 0;
+	end
+	else begin
+		if(ioctl_wr & rombios_download) begin
+			ioctl_wait <= 1;
+			rom_wr <= ~rom_wr;
+		end else if(ioctl_wait && (rom_wr == sd_wrack)) begin
+			ioctl_wait <= 0;
+			romwr_a <= romwr_a + 2'd2;
+		end
+	end
+end
+
+//////////////////////////////////////////////////////////////////////
 
 wire HBlank;
 wire HSync;
@@ -263,12 +342,18 @@ wire ce_pix;
 mycore mycore
 (
 	.sys_clk(clk_sys),
-	.reset(reset),
+	.reset(reset | rombios_download),
 	
     .cpu_clk(CLK_50M),
 
 	.pal(status[2]),
 	.scandouble(forced_scandoubler),
+
+	.ROM_RD(rom_rd),
+	.ROM_RDY(rom_sdrdy),
+	.ROM_A(rom_rdaddr),
+	.ROM_DO(rom_sdata),
+	.ROM_CLKEN(ce_rom),
 
 	.ce_pix(ce_pix),
 
