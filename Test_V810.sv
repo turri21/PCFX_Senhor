@@ -179,7 +179,6 @@ assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
 assign {SD_SCK, SD_MOSI, SD_CS} = 'Z;
-assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
 assign {DDRAM_CLK, DDRAM_BURSTCNT, DDRAM_ADDR, DDRAM_DIN, DDRAM_BE, DDRAM_RD, DDRAM_WE} = '0;  
 
 assign VGA_SL = 0;
@@ -212,6 +211,8 @@ localparam CONF_STR = {
 	"-;",
 	"O[122:121],Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O[2],TV Mode,NTSC,PAL;",
+	"-;",
+    "F1,ROM,Load BIOS;",
 	"-;",
 	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
@@ -277,11 +278,15 @@ wire reset = RESET | status[0] | buttons[1];
 
 /////////////////////////   MEMORY   /////////////////////////
 
-wire [19:0] rom_rdaddr;
-wire [15:0] rom_sdata;
-wire        rom_rd, rom_sdrdy;
-wire        sd_wrack;
-wire        ce_rom;
+wire        sdram_clkref;
+wire [24:0] sdram_raddr;
+wire [15:0] sdram_dout;
+wire        sdram_rd, sdram_rd_rdy;
+
+reg  [23:0] romwr_a;
+wire [15:0] romwr_d = ioctl_dout;
+reg         rom_wr = 0;
+wire        romwr_ack;
 
 sdram sdram
 (
@@ -289,26 +294,20 @@ sdram sdram
 
 	.init(~pll_locked),
 	.clk(clk_ram),
-	.clkref(ce_rom),
+	.clkref(sdram_clkref),
 
 	.waddr(romwr_a),
 	.din(romwr_d),
 	.we('0),
 	.we_req(rom_wr),
-	.we_ack(sd_wrack),
+	.we_ack(romwr_ack),
 
-	.raddr({5'b0,rom_rdaddr}),
-	.rd(rom_rd & ce_rom),
-	.rd_rdy(rom_sdrdy),
-	.dout(rom_sdata)
+	.raddr(sdram_raddr),
+	.rd(sdram_rd),
+	.rd_rdy(sdram_rd_rdy),
+	.dout(sdram_dout)
 );
 
-
-wire        romwr_ack;
-reg  [23:0] romwr_a;
-wire [15:0] romwr_d = ioctl_dout;
-
-reg  rom_wr = 0;
 
 always @(posedge clk_sys) begin
 	reg old_download, old_reset;
@@ -324,7 +323,7 @@ always @(posedge clk_sys) begin
 		if(ioctl_wr & rombios_download) begin
 			ioctl_wait <= 1;
 			rom_wr <= ~rom_wr;
-		end else if(ioctl_wait && (rom_wr == sd_wrack)) begin
+		end else if(ioctl_wait && (rom_wr == romwr_ack)) begin
 			ioctl_wait <= 0;
 			romwr_a <= romwr_a + 2'd2;
 		end
@@ -349,11 +348,12 @@ mycore mycore
 	.pal(status[2]),
 	.scandouble(forced_scandoubler),
 
-	.ROM_RD(rom_rd),
-	.ROM_RDY(rom_sdrdy),
-	.ROM_A(rom_rdaddr),
-	.ROM_DO(rom_sdata),
-	.ROM_CLKEN(ce_rom),
+    .sdram_clk(clk_ram),
+    .sdram_clkref(sdram_clkref),
+	.sdram_rd(sdram_rd),
+	.sdram_rd_rdy(sdram_rd_rdy),
+	.sdram_raddr(sdram_raddr),
+	.sdram_dout(sdram_dout),
 
 	.ce_pix(ce_pix),
 

@@ -4,11 +4,12 @@ module mach
    input         CE,
    input         RESn,
 
-   output        ROM_RD,
-   input         ROM_RDY,
+   output        CPU_BCYSTn,
+
    output [19:0] ROM_A,
    input [15:0]  ROM_DO,
-   output        ROM_CLKEN,
+   output        ROM_CEn,
+   input         ROM_READYn,
 
    output [31:0] A
    );
@@ -129,7 +130,7 @@ assign mem_readyn = unk_cen & rom_readyn & ram_cen;
 assign mem_szrqn = ~unk_cen | rom_cen;
 
 assign rom_do = ROM_DO;
-assign rom_readyn = rom_cen | ~ROM_RDY;
+assign rom_readyn = rom_cen | ROM_READYn;
 
 ram #(4, 32) dmem
   (
@@ -147,9 +148,10 @@ assign ram_cen = ~(~mem_mrqn & ~mem_a[31]);
 assign rom_cen = ~(~mem_mrqn & (mem_a[31:20] == 12'hFFF));
 assign unk_cen = ~(ram_cen & rom_cen);
 
-assign ROM_RD = ~rom_cen;
+assign CPU_BCYSTn = mem_bcystn;
+
+assign ROM_CEn = rom_cen;
 assign ROM_A = mem_a[19:0];
-assign ROM_CLKEN = ~rom_cen & ~mem_bcystn;
 
 assign A = mem_a;
 

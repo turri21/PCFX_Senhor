@@ -1,35 +1,43 @@
 
 module mycore
 (
-	input        sys_clk,
-	input        reset,
+	input         sys_clk,
+	input         reset,
 	
-    input        cpu_clk,
+    input         cpu_clk,
 
-	input        pal,
-	input        scandouble,
+	input         pal,
+	input         scandouble,
 
-    output       ROM_RD,
-    input        ROM_RDY,
-    input [19:0] ROM_A,
-    input [15:0] ROM_DO,
-    output       ROM_CLKEN,
+    input         sdram_clk,
+    output        sdram_clkref,
+    output        sdram_rd,
+    input         sdram_rd_rdy,
+    output [24:0] sdram_raddr,
+    input [15:0]  sdram_dout,
 
-    output reg   ce_pix,
+    output reg    ce_pix,
 
-	output reg   HBlank,
-	output reg   HSync,
-	output reg   VBlank,
-	output reg   VSync,
+	output reg    HBlank,
+	output reg    HSync,
+	output reg    VBlank,
+	output reg    VSync,
 
-	output [7:0] R,
-	output [7:0] G,
-	output [7:0] B
+	output [7:0]  R,
+	output [7:0]  G,
+	output [7:0]  B
 );
 
 reg         cpu_ce;
 reg         reset_cpu;
+reg         cpu_resn;
+wire        cpu_bcystn;
 reg [31:0]  a;
+
+wire [19:0] rom_a;
+wire [15:0] rom_do;
+wire        rom_cen;
+wire        rom_readyn;
 
 reg   [9:0] hc;
 reg   [9:0] vc;
@@ -43,19 +51,44 @@ always @(posedge cpu_clk) begin
   reset_cpu <= reset | VBlank;
 end
 
+always @(posedge cpu_clk) if (cpu_ce) begin
+  cpu_resn <= ~reset_cpu;
+end
+
 mach mach
   (
    .CLK(cpu_clk),
    .CE(cpu_ce),
-   .RESn(~reset_cpu),
+   .RESn(cpu_resn),
 
-   .ROM_RD(ROM_RD),
-   .ROM_RDY(ROM_RDY),
-   .ROM_A(ROM_A),
-   .ROM_DO(ROM_DO),
-   .ROM_CLKEN(ROM_CLKEN),
+   .CPU_BCYSTn(cpu_bcystn),
+
+   .ROM_A(rom_a),
+   .ROM_DO(rom_do),
+   .ROM_CEn(rom_cen),
+   .ROM_READYn(rom_readyn),
 
    .A(a)
+   );
+
+memif_sdram memif_sdram
+  (
+   .CPU_CLK(cpu_clk),
+   .CPU_CE(cpu_ce),
+   .CPU_RESn(cpu_resn),
+   .CPU_BCYSTn(cpu_bcystn),
+
+   .ROM_A(rom_a),
+   .ROM_DO(rom_do),
+   .ROM_CEn(rom_cen),
+   .ROM_READYn(rom_readyn),
+
+   .SDRAM_CLK(sdram_clk),
+   .SDRAM_CLKREF(sdram_clkref),
+   .SDRAM_RD(sdram_rd),
+   .SDRAM_RD_RDY(sdram_rd_rdy),
+   .SDRAM_RADDR(sdram_raddr),
+   .SDRAM_DOUT(sdram_dout)
    );
 
 always @(posedge sys_clk) begin
