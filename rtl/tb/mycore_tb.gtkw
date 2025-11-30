@@ -38,7 +38,6 @@
 [markername] ZZ
 [treeopen] mycore_tb.
 [treeopen] mycore_tb.mycore.
-[treeopen] mycore_tb.mycore.mach.dut_mem.
 [treeopen] mycore_tb.mycore.memif_sdram.
 [treeopen] mycore_tb.sdram_mem.
 [sst_width] 255
@@ -69,10 +68,10 @@ mycore_tb.mycore.sdram.rd_rdy
 -
 @22
 mycore_tb.mycore.mach.A[31:0]
-mycore_tb.mycore.mach.dut_mem.D_I[31:0]
-mycore_tb.mycore.mach.dut_mem.D_O[31:0]
+mycore_tb.mycore.mach.cpu.D_I[31:0]
+mycore_tb.mycore.mach.cpu.D_O[31:0]
 @28
-mycore_tb.mycore.mach.dut_mem.BCYSTn
+mycore_tb.mycore.mach.cpu.BCYSTn
 mycore_tb.mycore.memif_sdram.RAM_CEn
 mycore_tb.mycore.memif_sdram.SDRAM_WE_RDY
 mycore_tb.mycore.memif_sdram.ram_start_req

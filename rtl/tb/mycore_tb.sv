@@ -230,7 +230,7 @@ initial #0 begin
     reset = 0;
 end
 
-initial @(negedge reset) #(80e3) begin
+initial @(negedge reset) #(200e3) begin
     $error("Emergency exit!");
     $fatal(1);
 end

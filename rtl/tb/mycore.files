@@ -5,6 +5,8 @@ altddio_out.v
 ../memif_sdram.sv
 ../sdram.v
 ../mach.sv
+../huc6261.sv
 
 ../v810/v810_exec.sv
 ../v810/v810_mem.sv
+../v810/v810.sv
