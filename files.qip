@@ -5,8 +5,10 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/v810/v810_exec.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/v810/v810_regfile.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/v810/v810_sysreg.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/v810/v810_mem.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/v810/v810.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/ram.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/memif_sdram.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/huc6261.sv
 set_global_assignment -name SDC_FILE Test_V810.sdc
 set_global_assignment -name SYSTEMVERILOG_FILE Test_V810.sv
