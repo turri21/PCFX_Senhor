@@ -224,9 +224,16 @@ dpram #(.addr_width(15), .data_width(16), .disable_value(0)) vram0
      .clock(CLK),
      .address_a(vram0_a[14:0]),
      .data_a(vram0_do),
-     .cs_a(~vram0_a[15]),
+     .enable_a('1),
      .wren_a(vram0_we),
-     .q_a(vram0_di)
+     .q_a(vram0_di),
+     .cs_a(~vram0_a[15]),
+     .address_b('0),
+     .data_b('0),
+     .enable_b('1),
+     .wren_b('0),
+     .q_b(),
+     .cs_b('1)
      );
 
 huc6270 vdc1
@@ -271,9 +278,16 @@ dpram #(.addr_width(15), .data_width(16), .disable_value(0)) vram1
      .clock(CLK),
      .address_a(vram1_a[14:0]),
      .data_a(vram1_do),
-     .cs_a(~vram1_a[15]),
+     .enable_a('1),
      .wren_a(vram1_we),
-     .q_a(vram1_di)
+     .q_a(vram1_di),
+     .cs_a(~vram1_a[15]),
+     .address_b('0),
+     .data_b('0),
+     .enable_b('1),
+     .wren_b('0),
+     .q_b(),
+     .cs_b('1)
      );
 
 always @* begin

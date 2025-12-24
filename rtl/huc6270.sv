@@ -311,7 +311,7 @@ wire [15:0] SAT_Q;
 reg [7:0] CLR_A;
 reg CLR_WE;
 
-  always @(posedge CLK, posedge RST_N) begin
+  always @(posedge CLK) begin
     if(RST_N == 1'b0) begin
       DOT_CNT <= {3{1'b0}};
       TILE_CNT <= {7{1'b0}};
@@ -373,7 +373,7 @@ reg CLR_WE;
   assign VDISP_END_POS = ({5'b00000,VSW}) + 1 + ({2'b00,VDS}) + 2 + ({1'b0,VDW});
   assign VDE_END_POS = ({5'b00000,VSW}) + 1 + ({2'b00,VDS}) + 2 + ({1'b0,VDW}) + 1 + ({2'b00,VDE}) - 1;
   assign DISP_BREAK = DISP_CNT_INC == 1'b1 && HSYNC_F == 1'b1 ? 1'b1 : 1'b0;
-  always @(posedge CLK, posedge RST_N) begin : P7
+  always @(posedge CLK) begin : P7
     reg RC_CNT_UPDATED;
 
     if(RST_N == 1'b0) begin
@@ -802,7 +802,7 @@ reg CLR_WE;
     endcase
   end
 
-  always @(posedge CLK, posedge RST_N) begin : P5
+  always @(posedge CLK) begin : P5
     reg [8:0] NEW_OFS_Y;
 
     if(RST_N == 1'b0) begin
@@ -888,12 +888,16 @@ reg CLR_WE;
   (
    .clock(CLK),
    .data_a(RAM_DI),
+   .enable_a('1),
    .address_a(DMAS_SAT_ADDR),
    .wren_a(DMAS_SAT_WE),
+   .cs_a('1),
    .address_b(SAT_ADDR),
    .data_b('0),
+   .enable_b('1),
    .wren_b(CLR_WE),
-   .q_b(SAT_Q)
+   .q_b(SAT_Q),
+   .cs_b('1)
    );
 
   always @(posedge CLK) begin
@@ -946,7 +950,7 @@ reg CLR_WE;
     endcase
   end
 
-  always @(posedge CLK, posedge RST_N) begin : P3
+  always @(posedge CLK) begin : P3
     reg [5:0] SPR_H;
 
     if(RST_N == 1'b0) begin
@@ -1163,7 +1167,7 @@ reg CLR_WE;
     end
   end
 
-  always @(posedge CLK, posedge RST_N) begin : P2
+  always @(posedge CLK) begin : P2
     reg [3:0] COLOR;
     reg [9:0] SPR_LINE_X;
     reg [3:0] N;
@@ -1232,11 +1236,16 @@ reg CLR_WE;
 
    .address_a(SPR_LINE_ADDR[0]),
    .data_a(SPR_LINE_D[0]),
+   .enable_a('1),
    .wren_a(SPR_LINE_WE[0]),
+   .cs_a('1),
 
    .address_b(SPR_OUT_X[9:1]),
+   .data_b('0),
+   .enable_b('1),
    .wren_b(SPR_LINE_CLR & DCK_CE & ~SPR_OUT_X[0]),
-   .q_b(SPR_LINE_Q[0])
+   .q_b(SPR_LINE_Q[0]),
+   .cs_b('1)
    );
 
   dpram #(9,9) SPR_LINE_BUF1
@@ -1245,14 +1254,19 @@ reg CLR_WE;
 
    .address_a(SPR_LINE_ADDR[1]),
    .data_a(SPR_LINE_D[1]),
+   .enable_a('1),
    .wren_a(SPR_LINE_WE[1]),
+   .cs_a('1),
 
    .address_b(SPR_OUT_X[9:1]),
+   .data_b('0),
+   .enable_b('1),
    .wren_b(SPR_LINE_CLR & DCK_CE & SPR_OUT_X[0]),
-   .q_b(SPR_LINE_Q[1])
+   .q_b(SPR_LINE_Q[1]),
+   .cs_b('1)
    );
 
-  always @(posedge CLK, posedge RST_N) begin : P1
+  always @(posedge CLK) begin : P1
     reg [3:0] PX;
     reg [2:0] GX, GY;
 
@@ -1325,7 +1339,7 @@ reg CLR_WE;
     end
   end
 
-  always @(posedge CLK, posedge RST_N) begin
+  always @(posedge CLK) begin
     if(RST_N == 1'b0) begin
       AR <= {5{1'b0}};
       for (int i = 0; i < 32; i++)
@@ -1644,7 +1658,7 @@ reg CLR_WE;
     end
   end
 
-  always @(posedge CLK, posedge RST_N) begin
+  always @(posedge CLK) begin
     if(RST_N == 1'b0) begin
       SR_LATCH <= {7{1'b0}};
       RD_N_OLD <= 1'b1;
