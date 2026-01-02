@@ -34,13 +34,13 @@ module huc6261
      input [8:0]   VDC1_VD,
 
      // NTSC/YUV video output
-     output [7:0]  Y,
-     output [7:0]  U,
-     output [7:0]  V,
-     output        VSn,
-     output        HSn,
-     output        VBL,
-     output        HBL
+     output reg [7:0] Y,
+     output reg [7:0] U,
+     output reg [7:0] V,
+     output reg    VSn,
+     output reg    HSn,
+     output reg    VBL,
+     output reg    HBL
      );
 
 localparam [11:0] LEFT_BL_CLOCKS = 12'd456;
